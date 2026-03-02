@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.env
+.venv
+env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+.DS_Store
+
+# Local Env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs
+.idea/
+.vscode/
+
+# Project Specific
+backend_error*.log
+backend_error*.txt
+knowledge-refinery/backend_error*
+test_db.py
+knowledge-refinery/test_db.py
+knowledge-refinery/backend_error*
+knowledge-refinery/db_data/
+knowledge-refinery/backend/knowledge_vault/
+knowledge-refinery/backend/attachments/
+test_api.py

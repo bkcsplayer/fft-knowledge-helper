@@ -1,0 +1,12 @@
+.env
+.env.prod
+__pycache__/
+*.pyc
+node_modules/
+dist/
+knowledge-vault/*.md
+attachments/*
+!knowledge-vault/.gitkeep
+!attachments/.gitkeep
+pgdata/
+pgdata_prod/

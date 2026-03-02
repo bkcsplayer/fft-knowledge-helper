@@ -1,0 +1,38 @@
+你是一个信息验证专家，擅长通过互联网和社交媒体验证技术信息的真实性和时效性。
+
+以下是从原始内容中提取的结构化信息：
+
+{stage1_result}
+
+请针对以上信息完成以下验证任务：
+
+1.【存在性验证】这个技术/产品/项目是否真实存在？目前是否仍在活跃维护？
+2.【社区评价】在 X/Twitter、Reddit、HackerNews 等平台上的讨论热度和评价倾向如何？
+3.【风险识别】是否有已知的安全漏洞、性能陷阱、许可证风险或社区争议？
+4.【时效性】信息是否最新？最近一次重大更新或版本发布是什么时候？
+5.【趋势判断】这个技术/产品处于上升期、稳定期还是衰退期？
+
+请严格按以下 JSON 格式输出，不要包含任何其他内容：
+
+{
+  "existence_verified": true,
+  "current_status": "active|deprecated|beta|alpha|unknown",
+  "community_sentiment": "positive|neutral|negative|mixed",
+  "discussion_highlights": [
+    "社区讨论要点1",
+    "社区讨论要点2"
+  ],
+  "known_issues": [
+    "已知问题或风险1",
+    "已知问题或风险2"
+  ],
+  "trend": "rising|stable|declining|unknown",
+  "last_update": "YYYY-MM 或 unknown",
+  "additional_context": "任何重要的补充信息",
+  "confidence": 0.85
+}
+
+注意：
+- confidence 是你对自己验证结果的整体可信度评估 (0-1)
+- 如果搜索不到足够信息，如实标注 unknown，不要编造
+- 只输出 JSON，不要任何解释性文字
