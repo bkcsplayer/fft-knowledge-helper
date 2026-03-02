@@ -1,10 +1,17 @@
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Menu } from 'lucide-react';
 
-const Header = () => {
+const Header = ({ onMenuClick }) => {
     return (
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
-            <div className="flex items-center flex-1">
-                <div className="max-w-md w-full relative">
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center flex-1 gap-4">
+                <button
+                    onClick={onMenuClick}
+                    className="md:hidden p-2 -ml-2 text-gray-400 hover:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                >
+                    <span className="sr-only">Open sidebar</span>
+                    <Menu className="h-6 w-6" />
+                </button>
+                <div className="max-w-md w-full relative hidden sm:block">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Search className="h-5 w-5 text-gray-400" />
                     </div>
