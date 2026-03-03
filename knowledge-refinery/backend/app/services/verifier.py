@@ -44,11 +44,11 @@ class Verifier:
         result_json = extract_json_from_response(content)
         return result_json, in_tokens, out_tokens, cost
 
-    async def verify_grok(self, stage1_result: Dict[str, Any]) -> Tuple[Dict[str, Any], int, int, float]:
-        return await self._verify(self.model_grok, self.grok_prompt, stage1_result)
+    async def verify_grok(self, stage1_result: Dict[str, Any], model_override: str = None) -> Tuple[Dict[str, Any], int, int, float]:
+        return await self._verify(model_override or self.model_grok, self.grok_prompt, stage1_result)
 
-    async def verify_gemini(self, stage1_result: Dict[str, Any]) -> Tuple[Dict[str, Any], int, int, float]:
-        return await self._verify(self.model_gemini, self.gemini_prompt, stage1_result)
+    async def verify_gemini(self, stage1_result: Dict[str, Any], model_override: str = None) -> Tuple[Dict[str, Any], int, int, float]:
+        return await self._verify(model_override or self.model_gemini, self.gemini_prompt, stage1_result)
 
     def merge_results(self, grok_res: Tuple[Dict[str, Any], int, int, float] | None, 
                       gemini_res: Tuple[Dict[str, Any], int, int, float] | None) -> Dict[str, Any]:

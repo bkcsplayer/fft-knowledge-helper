@@ -85,11 +85,18 @@ class PipelineOrchestrator:
             return profile.profile_prompt
         return "你是一个具有商业头脑的技术战略分析师。" # Minimal fallback
 
+    async def _get_model_configs(self) -> dict:
+        from app.models.model_config import ModelConfig
+        res = await self.db.execute(select(ModelConfig))
+        models = res.scalars().all()
+        return {m.stage: m.model_id for m in models}
+
     async def run(self, entry_id: uuid_pkg.UUID, input_data: dict, task_state: TaskState):
         mode = task_state.state["mode"]
         logs_to_add = []
         attachments_to_add = []
         try:
+            db_models = await self._get_model_configs()
             # Preprocess
             processed = await self.preprocessor.process(input_data)
             
@@ -115,10 +122,11 @@ class PipelineOrchestrator:
             # Stage 1: extract
             task_state.set_stage("extract", "running")
             start = datetime.utcnow()
-            stage1_result, t_in, t_out, cost1 = await self.extractor.extract(processed)
+            model_ext = db_models.get("extract", self.extractor.model)
+            stage1_result, t_in, t_out, cost1 = await self.extractor.extract(processed, model_override=model_ext)
             dur1 = int((datetime.utcnow() - start).total_seconds() * 1000)
             
-            log1 = PipelineLog(entry_id=entry_id, stage="extract", model_used=self.extractor.model, input_tokens=t_in, output_tokens=t_out, cost_usd=cost1, duration_ms=dur1, status="success")
+            log1 = PipelineLog(entry_id=entry_id, stage="extract", model_used=model_ext, input_tokens=t_in, output_tokens=t_out, cost_usd=cost1, duration_ms=dur1, status="success")
             logs_to_add.append(log1)
             task_state.set_stage("extract", "completed", dur1, cost1)
 
@@ -130,8 +138,10 @@ class PipelineOrchestrator:
                 task_state.set_stage("verify_grok", "running")
                 task_state.set_stage("verify_gemini", "running")
                 
-                grok_task = self.verifier.verify_grok(stage1_result)
-                gemini_task = self.verifier.verify_gemini(stage1_result)
+                model_grok = db_models.get("verify_grok", self.verifier.model_grok)
+                model_gemini = db_models.get("verify_gemini", self.verifier.model_gemini)
+                grok_task = self.verifier.verify_grok(stage1_result, model_override=model_grok)
+                gemini_task = self.verifier.verify_gemini(stage1_result, model_override=model_gemini)
                 
                 start_v = datetime.utcnow()
                 results = await asyncio.gather(grok_task, gemini_task, return_exceptions=True)
@@ -142,17 +152,17 @@ class PipelineOrchestrator:
                 
                 if isinstance(results[0], Exception):
                     task_state.set_stage("verify_grok", "failed", dur_v, 0)
-                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_grok", model_used=self.verifier.model_grok, duration_ms=dur_v, status="failed", error_message=str(results[0])))
+                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_grok", model_used=model_grok, duration_ms=dur_v, status="failed", error_message=str(results[0])))
                 elif grok_res:
                     task_state.set_stage("verify_grok", "completed", dur_v, grok_res[3])
-                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_grok", model_used=self.verifier.model_grok, input_tokens=grok_res[1], output_tokens=grok_res[2], cost_usd=grok_res[3], duration_ms=dur_v, status="success", raw_response=grok_res[0]))
+                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_grok", model_used=model_grok, input_tokens=grok_res[1], output_tokens=grok_res[2], cost_usd=grok_res[3], duration_ms=dur_v, status="success", raw_response=grok_res[0]))
 
                 if isinstance(results[1], Exception):
                     task_state.set_stage("verify_gemini", "failed", dur_v, 0)
-                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_gemini", model_used=self.verifier.model_gemini, duration_ms=dur_v, status="failed", error_message=str(results[1])))
+                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_gemini", model_used=model_gemini, duration_ms=dur_v, status="failed", error_message=str(results[1])))
                 elif gemini_res:
                     task_state.set_stage("verify_gemini", "completed", dur_v, gemini_res[3])
-                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_gemini", model_used=self.verifier.model_gemini, input_tokens=gemini_res[1], output_tokens=gemini_res[2], cost_usd=gemini_res[3], duration_ms=dur_v, status="success", raw_response=gemini_res[0]))
+                    logs_to_add.append(PipelineLog(entry_id=entry_id, stage="verify_gemini", model_used=model_gemini, input_tokens=gemini_res[1], output_tokens=gemini_res[2], cost_usd=gemini_res[3], duration_ms=dur_v, status="success", raw_response=gemini_res[0]))
 
                 if not grok_res and not gemini_res:
                     confidence_penalty = 0.2
@@ -166,14 +176,17 @@ class PipelineOrchestrator:
             start = datetime.utcnow()
             profile = await self._get_active_profile()
             
+            model_ana = db_models.get("analyze", self.analyzer.model)
             markdown_body, metadata, a_in, a_out, a_cost = await self.analyzer.analyze(
                 stage1_result=stage1_result,
                 stage2_result=stage2_result,
                 profile_prompt=profile,
                 confidence_penalty=confidence_penalty,
+                model_override=model_ana,
+                fallback_model=db_models.get("extract")
             )
             dur3 = int((datetime.utcnow() - start).total_seconds() * 1000)
-            log3 = PipelineLog(entry_id=entry_id, stage="analyze", model_used=self.analyzer.model, input_tokens=a_in, output_tokens=a_out, cost_usd=a_cost, duration_ms=dur3, status="success")
+            log3 = PipelineLog(entry_id=entry_id, stage="analyze", model_used=model_ana, input_tokens=a_in, output_tokens=a_out, cost_usd=a_cost, duration_ms=dur3, status="success")
             logs_to_add.append(log3)
             task_state.set_stage("analyze", "completed", dur3, a_cost)
 

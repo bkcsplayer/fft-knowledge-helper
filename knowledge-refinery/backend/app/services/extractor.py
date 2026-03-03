@@ -52,9 +52,10 @@ class Extractor:
         self.prompt = (PROMPTS_DIR / "extraction.txt").read_text(encoding="utf-8")
         self.model = settings.MODEL_EXTRACT
 
-    async def extract(self, processed_input: Dict[str, Any]) -> Tuple[Dict[str, Any], int, int, float]:
+    async def extract(self, processed_input: Dict[str, Any], model_override: str = None) -> Tuple[Dict[str, Any], int, int, float]:
         input_type = processed_input["type"]
         messages = []
+        actual_model = model_override or self.model
         
         if input_type == "image":
             ext = processed_input.get("ext", "png")
@@ -82,7 +83,7 @@ class Extractor:
             })
             
         resp = await self.client.chat(
-            model=self.model,
+            model=actual_model,
             messages=messages,
             max_tokens=2048,
             temperature=0.2,
@@ -93,7 +94,7 @@ class Extractor:
         
         in_tokens = usage.get("prompt_tokens", 0)
         out_tokens = usage.get("completion_tokens", 0)
-        cost = calculate_cost(self.model, in_tokens, out_tokens)
+        cost = calculate_cost(actual_model, in_tokens, out_tokens)
         
         result_json = extract_json_from_response(content)
         return result_json, in_tokens, out_tokens, cost

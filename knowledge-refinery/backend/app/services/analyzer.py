@@ -14,7 +14,7 @@ class Analyzer:
         self.model = settings.MODEL_ANALYZE
 
     async def analyze(self, stage1_result: Dict[str, Any], stage2_result: Dict[str, Any] | None, 
-                      profile_prompt: str, confidence_penalty: float = 0.0) -> Tuple[str, Dict[str, Any], int, int, float]:
+                      profile_prompt: str, confidence_penalty: float = 0.0, model_override: str = None, fallback_model: str = None) -> Tuple[str, Dict[str, Any], int, int, float]:
         
         stage1_text = json.dumps(stage1_result, ensure_ascii=False, indent=2)
         stage2_text = json.dumps(stage2_result, ensure_ascii=False, indent=2) if stage2_result else "（快速模式，未执行搜索验证）"
@@ -31,19 +31,20 @@ class Analyzer:
             {"role": "user", "content": prompt}
         ]
         
+        actual_model = model_override or self.model
         try:
             resp = await self.client.chat(
-                model=self.model,
+                model=actual_model,
                 messages=messages,
                 max_tokens=4096,
                 temperature=0.4,
             )
         except Exception as e:
             # Fallback to sonnet
-            print(f"Analyzer Opus failed: {e}. Falling back to Sonnet.")
-            self.model = settings.MODEL_EXTRACT
+            print(f"Analyzer {actual_model} failed: {e}. Falling back to default extractor.")
+            actual_model = fallback_model or settings.MODEL_EXTRACT
             resp = await self.client.chat(
-                model=self.model,
+                model=actual_model,
                 messages=messages,
                 max_tokens=4096,
                 temperature=0.4,
@@ -55,7 +56,7 @@ class Analyzer:
         
         in_tokens = usage.get("prompt_tokens", 0)
         out_tokens = usage.get("completion_tokens", 0)
-        cost = calculate_cost(self.model, in_tokens, out_tokens)
+        cost = calculate_cost(actual_model, in_tokens, out_tokens)
         
         # Split Markdown content and metadata JSON
         # Output format has ```json at the end
