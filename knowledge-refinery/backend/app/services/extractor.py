@@ -19,21 +19,32 @@ def calculate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
 
 def extract_json_from_response(text: str) -> dict:
     text = text.strip()
-    # Try to find JSON block if wrapped
-    match = re.search(r'```(?:json)?\s*(.*?)\s*```', text, re.DOTALL)
-    if match:
-        text = match.group(1).strip()
-    else:
-        start = text.find('{')
-        end = text.rfind('}')
-        if start != -1 and end != -1 and end > start:
-            text = text[start:end+1]
     
+    # 1. First attempt: Strict Markdown Code Block Extraction
+    match_cmd = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
+    if match_cmd:
+        json_candidate = match_cmd.group(1).strip()
+        try:
+            return json.loads(json_candidate)
+        except json.JSONDecodeError:
+            pass # Fall through to brace extraction
+            
+    # 2. Second attempt: Brace extraction (robust against trailing text)
+    start_idx = text.find('{')
+    end_idx = text.rfind('}')
+    
+    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+        json_candidate = text[start_idx:end_idx+1]
+        try:
+            return json.loads(json_candidate)
+        except json.JSONDecodeError:
+            pass # Fall through to desperation fallback
+            
+    # 3. Last fallback Attempt: Let standard json try (likely fails)
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
-        # Very basic fallback or throw
-        raise ValueError(f"Failed to parse JSON from response: {text[:100]}...")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse JSON from LLM: {text[:200]}... Error: {e}")
 
 class Extractor:
     def __init__(self, client: OpenRouterClient):
