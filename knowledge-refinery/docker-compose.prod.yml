@@ -31,7 +31,7 @@ services:
     image: postgres:16-alpine
     restart: always
     volumes:
-      - pgdata_prod:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -45,7 +45,7 @@ services:
       - refinery-net
 
 volumes:
-  pgdata_prod:
+  pgdata:
 
 
 networks:
