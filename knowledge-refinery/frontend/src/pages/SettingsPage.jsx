@@ -123,16 +123,6 @@ const SettingsPage = () => {
                                     onChange={(e) => handleModelChange(model.id, 'model_id', e.target.value)}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-mono"
                                 />
-                                <datalist id="openrouter-models">
-                                    <option value="deepseek/deepseek-chat">DeepSeek 最新 (V3)</option>
-                                    <option value="minimax/minimax-2.5">Minimax 2.5</option>
-                                    <option value="moonshotai/moonshot-v1-32k">Kimi 2.5 (Moonshot)</option>
-                                    <option value="zhipu/glm-5">GLM-5</option>
-                                    <option value="google/gemini-3.0-pro">Gemini 3.0 Pro</option>
-                                    <option value="x-ai/grok-3">Grok 3 最新</option>
-                                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                                    <option value="anthropic/claude-opus-4-6">Claude Opus</option>
-                                </datalist>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Max Tokens</label>
@@ -161,6 +151,17 @@ const SettingsPage = () => {
                     ))}
                 </div>
             </section>
+
+            <datalist id="openrouter-models">
+                <option value="deepseek/deepseek-chat">DeepSeek 最新 (V3)</option>
+                <option value="minimax/minimax-2.5">Minimax 2.5</option>
+                <option value="moonshotai/moonshot-v1-32k">Kimi 2.5 (Moonshot)</option>
+                <option value="zhipu/glm-5">GLM-5</option>
+                <option value="google/gemini-3.0-pro">Gemini 3.0 Pro</option>
+                <option value="x-ai/grok-3">Grok 3 最新</option>
+                <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                <option value="anthropic/claude-opus-4-6">Claude Opus</option>
+            </datalist>
         </div>
     );
 };
