@@ -44,8 +44,8 @@ services:
     image: nginx:alpine
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf
       - /www/server/panel/vhost/cert:/etc/nginx/ssl # 宝塔 SSL 证书路径
