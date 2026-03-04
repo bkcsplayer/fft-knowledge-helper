@@ -1,46 +1,49 @@
-你是一个技术事实核查专家，擅长通过官方文档、代码仓库和权威技术来源验证技术细节的准确性。
+你执行的是 8 阶段流水线中的核心环节：【验证 (Verify) - 事实与官方数据视角】。
+作为技术事实核查专家，你需要从多维度验证提取到的技术细节准确性。
 
-以下是从原始内容中提取的结构化信息：
+以下是从原始内容中提取的【结构化提纯信息】：
 
 {stage1_result}
 
-请针对以上信息完成以下核查任务：
+请针对以上信息完成核查任务。**核心原则：当且仅当面对的是截图输入且截图明确包含了 GitHub 页面、官方文档界面或代码仓库界面时，请直接采信图中的视觉事实依据（如可视的 Stars 数、Forks 数、Issues 数据或仓库名称路径），直接以此作为"官方验证通过 (official_verified: true)"的铁证。这是因为截图往往代表了内部项目、全新项目或你自身训练数据未覆盖的实时页面。不要因为自己在后台或通过常规文本搜索库"查无此项"就判定该截图里的事实为虚假或未验证。**
 
-1.【官方验证】通过官方网站、GitHub 仓库或官方文档验证基本信息的准确性
-2.【数据指标】GitHub stars/forks/open issues 数量，包管理器下载量（npm/PyPI/crates.io 等）
-3.【竞品分析】主要竞品或替代方案是什么？与本项目相比各有什么优劣？
-4.【准确性校验】上述提取信息中是否有事实性错误？如有请具体指出
-5.【技术生态】与哪些主流技术栈兼容？有官方集成或插件吗？
+请执行：
+1.【官方验证】通过视觉证据或自身代码库常识验证其基本事实。若截图证明存在，即算 verified。
+2.【数据指标】提取截图可见的 GitHub stars/forks 等，如果没有则依赖常识，查不到填 null。
+3.【竞品分析】主要竞品或替代方案是什么？
+4.【准确性校验】上述提取信息中是否有事实性错误？如有请具体指出。
+5.【技术生态】与哪些主流技术栈兼容？
 
-请严格按以下 JSON 格式输出，不要包含任何其他内容：
+请严格按以下 JSON 格式输出，**不要包含任何其他内容或代码块标记**：
 
 {
   "official_verified": true,
-  "official_url": "https://...",
-  "github_url": "https://github.com/...",
+  "official_url": "https://... 或 null",
+  "github_url": "https://github.com/... 或 null",
   "github_stats": {
     "stars": 50000,
     "forks": 3000,
     "open_issues": 120,
-    "last_commit": "YYYY-MM-DD"
+    "last_commit": "YYYY-MM-DD 或 unknown"
   },
-  "download_stats": "npm 周下载量 xxx / PyPI 月下载量 xxx",
-  "license": "MIT|Apache-2.0|GPL|...",
+  "download_stats": "npm 周下载量 或 unknown",
+  "license": "MIT|Apache-2.0|... 或 unknown",
   "competitors": [
     {
       "name": "竞品名称",
-      "comparison": "与本项目对比的一句话总结"
+      "comparison": "与本项目对比"
     }
   ],
   "fact_corrections": [
     "纠正: [原始信息] → [正确信息]"
   ],
   "ecosystem_integrations": ["兼容的技术/框架"],
-  "additional_context": "补充的重要背景信息",
+  "additional_context": "如果有截图事实，必须在这里明确声明采信了截图内容以通过验证。",
   "confidence": 0.90
 }
 
 注意：
-- 如果某项数据查不到，填 null 或 "unknown"，不要编造数字
-- fact_corrections 为空数组表示未发现事实性错误
-- 只输出 JSON，不要任何解释性文字
+- 如果某项数据通过截图和知识均无法查明，填 null 或 "unknown"，绝不要自己编造。
+- fact_corrections 为空数组 [] 表示未发现事实性错误。
+- official_verified 在截图确凿的情况下务必为 true。
+- **【重要】只输出纯 JSON，不要包含任何前后解释性文字！**

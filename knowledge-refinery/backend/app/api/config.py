@@ -35,8 +35,8 @@ async def get_models_config(db: AsyncSession = Depends(get_db)):
     if not models:
         defaults = [
             ModelConfig(stage="extract", model_id="anthropic/claude-3.5-sonnet", display_name="Claude Sonnet 3.5 (提纯)", max_tokens=2048, temperature=0.2),
-            ModelConfig(stage="verify_grok", model_id="x-ai/grok-3", display_name="Grok 3 (社区验证)", max_tokens=2048, temperature=0.3),
-            ModelConfig(stage="verify_gemini", model_id="google/gemini-2.5-pro", display_name="Gemini 2.5 Pro (事实验证)", max_tokens=2048, temperature=0.2),
+            ModelConfig(stage="verify_grok", model_id="x-ai/grok-3", display_name="Default: Grok 3 (社区验证)", max_tokens=2048, temperature=0.3),
+            ModelConfig(stage="verify_gemini", model_id="google/gemini-2.5-pro", display_name="Default: Gemini 2.5 (事实验证)", max_tokens=2048, temperature=0.2),
             ModelConfig(stage="analyze", model_id="anthropic/claude-opus-4-6", display_name="Claude Opus 4.6 (深度分析)", max_tokens=4096, temperature=0.4),
         ]
         db.add_all(defaults)
