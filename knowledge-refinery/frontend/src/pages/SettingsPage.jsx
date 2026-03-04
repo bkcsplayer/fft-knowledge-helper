@@ -3,6 +3,17 @@ import { profile as profileApi, config as configApi } from '../api/client';
 import toast from 'react-hot-toast';
 import { Save } from 'lucide-react';
 
+const PREDEFINED_MODELS = [
+    { value: 'deepseek/deepseek-chat', label: 'DeepSeek 最新 (V3)' },
+    { value: 'minimax/minimax-2.5', label: 'Minimax 2.5' },
+    { value: 'moonshotai/moonshot-v1-32k', label: 'Kimi 2.5 (Moonshot)' },
+    { value: 'zhipu/glm-5', label: 'GLM-5' },
+    { value: 'google/gemini-3.0-pro', label: 'Gemini 3.0 Pro' },
+    { value: 'x-ai/grok-3', label: 'Grok 3 最新' },
+    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    { value: 'anthropic/claude-opus-4-6', label: 'Claude Opus' }
+];
+
 const SettingsPage = () => {
     const [userProfile, setUserProfile] = useState({ profile_name: '', profile_prompt: '' });
     const [modelsInfo, setModelsInfo] = useState([]);
@@ -50,6 +61,10 @@ const SettingsPage = () => {
         } catch (e) {
             toast.error(`Failed to save ${model.display_name}`);
         }
+    };
+
+    const isCustomModel = (modelId) => {
+        return modelId && !PREDEFINED_MODELS.some(pm => pm.value === modelId);
     };
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading settings...</div>;
@@ -112,56 +127,73 @@ const SettingsPage = () => {
                     </p>
                 </div>
                 <div className="divide-y divide-gray-200 bg-gray-50">
-                    {modelsInfo.map(model => (
-                        <div key={model.id} className="p-6 grid grid-cols-1 gap-y-6 sm:grid-cols-4 sm:gap-x-4 items-end">
-                            <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">{model.display_name} <br /><span className="text-xs text-gray-400 font-normal">Stage: {model.stage}</span></label>
-                                <input
-                                    type="text"
-                                    list="openrouter-models"
-                                    value={model.model_id}
-                                    onChange={(e) => handleModelChange(model.id, 'model_id', e.target.value)}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-mono"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Max Tokens</label>
-                                <input
-                                    type="number"
-                                    value={model.max_tokens}
-                                    onChange={(e) => handleModelChange(model.id, 'max_tokens', e.target.value)}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                />
-                            </div>
-                            <div className="flex gap-2 items-center">
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium text-gray-700">Temp</label>
+                    {modelsInfo.map(model => {
+                        const showCustomInput = isCustomModel(model.model_id);
+                        const selectValue = showCustomInput ? 'custom' : model.model_id;
+
+                        return (
+                            <div key={model.id} className="p-6 grid grid-cols-1 gap-y-6 sm:grid-cols-4 sm:gap-x-4 items-end">
+                                <div className="sm:col-span-2 space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        {model.display_name} <br />
+                                        <span className="text-xs text-gray-400 font-normal">Stage: {model.stage}</span>
+                                    </label>
+                                    <select
+                                        value={selectValue}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val !== 'custom') {
+                                                handleModelChange(model.id, 'model_id', val);
+                                            } else {
+                                                handleModelChange(model.id, 'model_id', '');
+                                            }
+                                        }}
+                                        className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                    >
+                                        {PREDEFINED_MODELS.map(pm => (
+                                            <option key={pm.value} value={pm.value}>{pm.label} ({pm.value})</option>
+                                        ))}
+                                        <option value="custom">Other (Custom model ID...)</option>
+                                    </select>
+
+                                    {showCustomInput && (
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. meta-llama/llama-3-70b-instruct"
+                                            value={model.model_id}
+                                            onChange={(e) => handleModelChange(model.id, 'model_id', e.target.value)}
+                                            className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-mono text-primary-600 bg-blue-50"
+                                        />
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Max Tokens</label>
                                     <input
-                                        type="number" step="0.1" min="0" max="2"
-                                        value={model.temperature}
-                                        onChange={(e) => handleModelChange(model.id, 'temperature', e.target.value)}
+                                        type="number"
+                                        value={model.max_tokens}
+                                        onChange={(e) => handleModelChange(model.id, 'max_tokens', e.target.value)}
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                     />
                                 </div>
-                                <button onClick={() => handleSaveModel(model.id)} className="mt-6 inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 hover:text-primary-600">
-                                    <Save className="w-4 h-4" />
-                                </button>
+                                <div className="flex gap-2 items-center">
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700">Temp</label>
+                                        <input
+                                            type="number" step="0.1" min="0" max="2"
+                                            value={model.temperature}
+                                            onChange={(e) => handleModelChange(model.id, 'temperature', e.target.value)}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                        />
+                                    </div>
+                                    <button onClick={() => handleSaveModel(model.id)} className="mt-6 inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 hover:text-primary-600">
+                                        <Save className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </section>
-
-            <datalist id="openrouter-models">
-                <option value="deepseek/deepseek-chat">DeepSeek 最新 (V3)</option>
-                <option value="minimax/minimax-2.5">Minimax 2.5</option>
-                <option value="moonshotai/moonshot-v1-32k">Kimi 2.5 (Moonshot)</option>
-                <option value="zhipu/glm-5">GLM-5</option>
-                <option value="google/gemini-3.0-pro">Gemini 3.0 Pro</option>
-                <option value="x-ai/grok-3">Grok 3 最新</option>
-                <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                <option value="anthropic/claude-opus-4-6">Claude Opus</option>
-            </datalist>
         </div>
     );
 };
